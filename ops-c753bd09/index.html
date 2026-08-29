@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<!-- Hosted publicly so it can be reached from a phone, but it should never be
+     indexed or listed. The real access control is the server-side allowlist in
+     the admin-activate function; this just keeps the page out of search. -->
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#2563EB">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="CS Admin">
+<title>CitationSniper — Admin</title>
+<style>
+  :root {
+    --bg: #F6F7F9; --card: #FFFFFF; --ink: #16191D; --muted: #667085;
+    --line: #E4E7EC; --accent: #2563EB; --ok: #16A34A; --warn: #D97706; --err: #DC2626;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg); color: var(--ink); margin: 0; padding: 32px 20px; line-height: 1.5;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: 13px; margin: 0 0 24px; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 20px; margin-bottom: 16px;
+  }
+  .card h2 { font-size: 14px; margin: 0 0 14px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  label { display: block; font-size: 13px; font-weight: 600; margin: 0 0 5px; }
+  .hint { font-weight: 400; color: var(--muted); font-size: 12px; }
+  input[type=text], input[type=email], input[type=password], input[type=number], textarea, select {
+    width: 100%; padding: 9px 11px; border: 1px solid var(--line); border-radius: 7px;
+    font-size: 14px; font-family: inherit; background: #fff; color: var(--ink);
+  }
+  textarea { resize: vertical; min-height: 62px; }
+  .field { margin-bottom: 14px; }
+  .row { display: flex; gap: 12px; }
+  .row > * { flex: 1; }
+  button {
+    background: var(--accent); color: #fff; border: 0; border-radius: 7px;
+    padding: 10px 16px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit;
+  }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  button.secondary { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+  button.danger { background: var(--err); }
+  .hidden { display: none !important; }
+  .msg { padding: 10px 13px; border-radius: 7px; font-size: 13px; margin-bottom: 14px; }
+  .msg.err { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
+  .msg.ok  { background: #F0FDF4; color: #166534; border: 1px solid #BBF7D0; }
+  .msg.warn{ background: #FFFBEB; color: #92400E; border: 1px solid #FDE68A; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  td { padding: 7px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td:first-child { color: var(--muted); width: 42%; }
+  .pill { display: inline-block; padding: 2px 9px; border-radius: 99px; font-size: 12px; font-weight: 600; }
+  .pill.free { background: #F2F4F7; color: #475467; }
+  .pill.pro  { background: #DCFCE7; color: #166534; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .who { font-size: 12px; color: var(--muted); }
+  .checkline { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .checkline input { width: auto; }
+  .log { font-size: 12px; }
+  .log li { padding: 8px 0; border-bottom: 1px solid var(--line); list-style: none; }
+  .log ul { padding: 0; margin: 0; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; word-break: break-all; }
+
+  /* ---- phone ----
+     Two things matter here beyond width. Inputs go to 16px because iOS Safari
+     auto-zooms the page on focus for anything smaller, which leaves the form
+     scrolled sideways mid-entry. And tap targets grow to 44px, Apple's minimum
+     for a reliable touch. */
+  @media (max-width: 620px) {
+    body { padding: 16px 12px calc(16px + env(safe-area-inset-bottom)); }
+    .topbar { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .card { padding: 16px; }
+    .row { flex-direction: column; gap: 0; }
+    input[type=text], input[type=email], input[type=password],
+    input[type=number], textarea, select {
+      font-size: 16px; padding: 12px;
+    }
+    button { width: 100%; min-height: 44px; font-size: 15px; }
+    button.secondary { width: auto; min-width: 120px; }
+    #signOutBtn { width: auto; min-height: 0; }
+    table td { display: block; }
+    td:first-child { width: auto; padding-bottom: 0; font-size: 12px; }
+    td:last-child { padding-top: 2px; font-weight: 600; }
+    .checkline input { min-width: 20px; min-height: 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div>
+      <h1>CitationSniper Admin</h1>
+      <p class="sub">Manual Pro activation for payments taken outside the normal checkout flow.</p>
+    </div>
+    <div class="who">
+      <span id="whoami"></span>
+      <button id="signOutBtn" class="secondary hidden" style="margin-left:8px;padding:5px 10px;font-size:12px;">Sign out</button>
+    </div>
+  </div>
+
+  <!-- Sign in -->
+  <div id="authCard" class="card">
+    <h2>Sign in</h2>
+    <div id="authMsg"></div>
+    <div class="field">
+      <label for="adminEmail">Admin email</label>
+      <input type="email" id="adminEmail" autocomplete="username" placeholder="you@example.com">
+    </div>
+    <div class="field">
+      <label for="adminPassword">Password</label>
+      <input type="password" id="adminPassword" autocomplete="current-password">
+    </div>
+    <button id="signInBtn">Sign in</button>
+  </div>
+
+  <!-- Lookup -->
+  <div id="lookupCard" class="card hidden">
+    <h2>1 · Find the student's account</h2>
+    <div class="field">
+      <label for="lookupEmail">Account email
+        <span class="hint">— the address they used to sign up in the extension</span>
+      </label>
+      <input type="email" id="lookupEmail" placeholder="student@my.uopeople.edu">
+    </div>
+    <button id="lookupBtn">Look up</button>
+  </div>
+
+  <!-- Result -->
+  <div id="resultCard" class="card hidden">
+    <h2>2 · Confirm current status</h2>
+    <div id="lookupMsg"></div>
+    <table id="userTable"></table>
+    <div id="priorBox" class="hidden" style="margin-top:16px;">
+      <label>Previous manual activations</label>
+      <div class="log"><ul id="priorList"></ul></div>
+    </div>
+  </div>
+
+  <!-- Activate -->
+  <div id="activateCard" class="card hidden">
+    <h2>3 · Grant Pro</h2>
+    <div id="activateMsg"></div>
+    <div class="field">
+      <label for="planSelect">Plan</label>
+      <select id="planSelect">
+        <option value="pro_lifetime">Pro Lifetime (no expiry)</option>
+        <option value="pro_monthly">Pro Monthly (+1 calendar month)</option>
+      </select>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="refInput">Paystack reference <span class="hint">— from the Payment Page</span></label>
+        <input type="text" id="refInput" placeholder="e.g. T123456789">
+      </div>
+      <div class="field">
+        <label for="amountInput">Amount paid <span class="hint">— in GHS</span></label>
+        <input type="number" id="amountInput" step="0.01" placeholder="310.00">
+      </div>
+    </div>
+    <div class="field">
+      <label for="noteInput">Audit note <span class="hint">— required</span></label>
+      <textarea id="noteInput" placeholder="UoPeople promo, paid GHS 310 via Payment Page, ref …"></textarea>
+    </div>
+    <div class="field checkline">
+      <input type="checkbox" id="suppressReceipt">
+      <label for="suppressReceipt" style="margin:0;font-weight:400;">
+        Skip receipt email <span class="hint">(Paystack already emails its own receipt)</span>
+      </label>
+    </div>
+    <button id="activateBtn">Grant Pro access</button>
+  </div>
+
+  <!-- History -->
+  <div id="historyCard" class="card hidden">
+    <h2>Recent manual activations</h2>
+    <button id="historyBtn" class="secondary" style="margin-bottom:12px;">Refresh</button>
+    <div class="log"><ul id="historyList"></ul></div>
+  </div>
+
+</div>
+<script type="module" src="admin.js"></script>
+</body>
+</html>
