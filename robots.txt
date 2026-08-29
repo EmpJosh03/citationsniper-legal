@@ -1,0 +1,10 @@
+# Copy this to the ROOT of the citationsniper-legal repo (alongside index.html),
+# not into the admin folder — crawlers only read /robots.txt at the domain root.
+#
+# This keeps the admin tool out of search results. It is NOT an access control:
+# robots.txt is advisory, and the file itself is public, so treat the path below
+# as discoverable. The actual boundary is the server-side ADMIN_EMAILS allowlist
+# in the admin-activate Edge Function.
+
+User-agent: *
+Disallow: /citationsniper-legal/ops-c753bd09/
